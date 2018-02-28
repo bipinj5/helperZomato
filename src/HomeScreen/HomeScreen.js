@@ -2,7 +2,6 @@ import React from "react";
 import { Statusbar, Alert, View, Image, StyleSheet, ActivityIndicator, ListView } from 'react-native';
 import { Container, Header, Title, Left, Icon, Right, Button, Body, Text, Card, CardItem,
  Form, Item, Input } from 'native-base';
-import { trySearch } from '../Login/Startup';
 import Search from './searchid.js';
 import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import FeatherIcon from "react-native-vector-icons/Feather";
@@ -14,8 +13,7 @@ export default class HomeScreen extends React.Component {
     this.state = {
 		data: [],
 	  	searchTextBox : '',
-		isLoading: true,
-		contentLoaded: false
+		isLoading: true
 	  }
   }	
   
@@ -24,9 +22,9 @@ GetItem(restaurant_name) {
 }
   
   handleSearchPressed = async () => {
-    let resp = await trySearch(this.state.searchTextBox);
-    if(resp.status !== 200){
-      if (resp.status === 504) {
+    let response = await trySearch(this.state.searchTextBox);
+    if(response.status !== 200){
+      if (response.status === 504) {
         Alert.alert("Network Error", "Check your internet connection" )
       } else {
         Alert.alert("Error", "Unauthorized, Invalid username or password")      
@@ -54,38 +52,50 @@ GetItem(restaurant_name) {
      />
    );
  }
+  
+  async trySearch(search) {
+    console.log('Making search query');
+    let requestOptions = {
+      "method": "POST",
+      "headers": {
+        "Content-Type":"application/json"
+      }
+    };
 
-componentDidMount() {
-  fetch('https://app.butane33.hasura-app.io/search/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-	  "searchInput": this.state.searchTextBox
-	  })
-  })
-   .then((response) => response.json())
-   .then((responseJson) => {
-     let ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-     this.setState({
-        isLoading: false,
-        dataSource: ds.cloneWithRows(responseJson.restaurantList),
-     }, function() {
+    let body = {
+      "searchInput": this.state.searchTextBox
+    };
+
+    requestOptions["body"] = JSON.stringify(body);
+    console.log("Auth Response ---------------------");
+  
+    try {
+      let response = await fetch(searchUrl, requestOptions)
+	  .then((response) => response.json())
+      .then((responseJson) => {
+       let ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+       this.setState({
+         isLoading: false,
+         dataSource: ds.cloneWithRows(responseJson.restaurantList),
+       }, function() {
           // do something with new state
-     });
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-}
+       });
+      })
+	  .catch((error) => {
+         console.error(error);
+      });
+      console.log(response);
+      return response; 
+    }
+    catch(e) {
+      console.log("Request Failed: " + e);
+    }
+ }
+ 
+  componentDidMount() {
+	  this.trySearch(search);
+  }
 
-componentWillReceiveProps(nextProps) {
-	if(parseInt(nextProps.restaurantList, 4) !== parseInt(this.props.restaurantList, 4)) {
-		this.setState({ isLoading: false })
-		this.contentLoaded = 0
-	}
-}
   
   render() {
     if (this.state.isLoading) {

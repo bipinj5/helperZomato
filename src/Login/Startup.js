@@ -74,33 +74,6 @@ export async function tryLogin(username, name, password) {
   }
 }
 
-export async function trySearch(search) {
-  console.log('Making search query');
-  let requestOptions = {
-    "method": "POST",
-    "headers": {
-      "Content-Type":"application/json"
-    }
-  };
-
-  let body = {
-    "searchInput": search
-  };
-
-  requestOptions["body"] = JSON.stringify(body);
-  console.log("Auth Response ---------------------");
-  
-  try {
-    let resp = await fetch(searchUrl, requestOptions);
-    console.log(resp);
-    return resp; 
-  }
-  catch(e) {
-    console.log("Request Failed: " + e);
-    return networkErrorObj;
-  }
-}
-
 export default class Startup extends React.Component {
   render() {
 	return (
