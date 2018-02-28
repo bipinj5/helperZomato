@@ -14,7 +14,8 @@ export default class HomeScreen extends React.Component {
     this.state = {
 		data: [],
 	  	searchTextBox : '',
-		isLoading: true
+		isLoading: true,
+		contentLoaded: false
 	  }
   }	
   
@@ -61,7 +62,7 @@ componentDidMount() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-	  "searchInput": "Kalyan"
+	  "searchInput": this.state.searchTextBox
 	  })
   })
    .then((response) => response.json())
@@ -77,7 +78,14 @@ componentDidMount() {
     .catch((error) => {
       console.error(error);
     });
-} 
+}
+
+componentWillReceiveProps(nextProps) {
+	if(parseInt(nextProps.restaurantList, 4) !== parseInt(this.props.restaurantList, 4)) {
+		this.setState({ isLoading: false })
+		this.contentLoaded = 0
+	}
+}
   
   render() {
     if (this.state.isLoading) {
@@ -89,8 +97,7 @@ componentDidMount() {
     }
 	
   return (
-      <Container>
-		  <Card>
+        <Container>
 		    <Form>
 		      <Item>
 		        <Input value={this.state.searchTextbox} onChangeText={this.handleSearchChange} placeholder="Search Here" />
@@ -99,7 +106,6 @@ componentDidMount() {
 			    </Button>
 		      </Item>
 		    </Form>
-		  </Card>
         <ListView
           dataSource={this.state.dataSource}
           renderSeparator= {this.ListViewItemSeparator}
